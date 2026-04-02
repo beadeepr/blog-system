@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>我的博客</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: white;
+      padding: 24px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .topbar {
+      width: 800px;
+      margin: 20px auto 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .search-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-form input,
+    .search-form select {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .search-form input {
+      width: 220px;
+    }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .container {
+      width: 800px;
+      margin: 20px auto 40px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    .card a {
+      color: #111827;
+      text-decoration: none;
+    }
+    .card a:hover {
+      color: #2563eb;
+    }
+    .meta {
+      color: #6b7280;
+      font-size: 14px;
+      margin: 8px 0;
+    }
+    .empty {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+    .page-link {
+      display: inline-block;
+      margin: 0 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .page-link.active {
+      background: #2563eb;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<header>我的博客</header>
+
+<div class="topbar">
+  <form action="/" method="GET" class="search-form">
+    <input
+      type="text"
+      name="keyword"
+      placeholder="搜索标题/摘要/正文/标签"
+      value="<%= keyword || '' %>"
+    >
+
+    <select name="category">
+      <option value="">全部分类</option>
+      <% categories.forEach(item => { %>
+        <option value="<%= item.category %>" <%= category === item.category ? 'selected' : '' %>>
+          <%= item.category %>
+        </option>
+      <% }) %>
+    </select>
+
+    <button type="submit" class="btn">筛选</button>
+  </form>
+
+ <div style="display:flex; gap:10px;">
+  <a class="btn" href="/create">发布文章</a>
+  <a class="btn" href="/login">后台登录</a>
+</div>
+</div>
+
+<div class="container">
+  <% if (articles.length === 0) { %>
+    <div class="empty">没有找到符合条件的文章</div>
+  <% } %>
+
+  <% articles.forEach(article => { %>
+    <div class="card">
+      <h2>
+        <a href="/article/<%= article.id %>"><%= article.title %></a>
+      </h2>
+
+      <p><%= article.summary %></p>
+
+      <p class="meta">分类：<%= article.category || '未分类' %></p>
+      <p class="meta">
+        标签：
+        <% if (article.tags) { %>
+          <% article.tags.split(',').forEach(tag => { %>
+            <a
+              href="/?keyword=<%= tag.trim() %>"
+              style="margin-right:6px; background:#e0ecff; padding:4px 8px; border-radius:6px; text-decoration:none;"
+            >
+              <%= tag.trim() %>
+            </a>
+          <% }) %>
+        <% } else { %>
+          无
+        <% } %>
+      </p>
+      <p class="meta">阅读量：<%= article.view_count %></p>
+    </div>
+  <% }) %>
+
+  <% if (totalPages > 1) { %>
+    <div style="margin-top: 20px; text-align: center;">
+      <% if (page > 1) { %>
+        <a
+          href="/?keyword=<%= keyword || '' %>&category=<%= category || '' %>&page=<%= page - 1 %>"
+          class="btn"
+          style="margin-right: 6px;"
+        >
+          上一页
+        </a>
+      <% } %>
+
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a
+          href="/?keyword=<%= keyword || '' %>&category=<%= category || '' %>&page=<%= i %>"
+          class="page-link <%= i === page ? 'active' : '' %>"
+        >
+          <%= i %>
+        </a>
+      <% } %>
+
+      <% if (page < totalPages) { %>
+        <a
+          href="/?keyword=<%= keyword || '' %>&category=<%= category || '' %>&page=<%= page + 1 %>"
+          class="btn"
+          style="margin-left: 6px;"
+        >
+          下一页
+        </a>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>评论审核</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: white;
+      padding: 24px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .container {
+      width: 1000px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f9fafb;
+    }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+    .btn.gray {
+      background: #6b7280;
+    }
+    .btn.red {
+      background: #dc2626;
+    }
+    .status {
+      font-weight: bold;
+    }
+    .pending {
+      color: #d97706;
+    }
+    .approved {
+      color: #16a34a;
+    }
+    .rejected {
+      color: #dc2626;
+    }
+    form {
+      display: inline;
+    }
+  </style>
+</head>
+<body>
+
+<header>评论审核管理</header>
+
+<div class="container">
+  <p>
+  <a href="/admin" class="btn gray">返回后台首页</a>
+  <a href="/" class="btn gray">返回首页</a>
+  <a href="/logout" class="btn gray">退出登录</a>
+</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>文章</th>
+        <th>评论人</th>
+        <th>评论内容</th>
+        <th>时间</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% comments.forEach(comment => { %>
+        <tr>
+          <td><%= comment.id %></td>
+          <td><%= comment.article_title || '文章已删除' %></td>
+          <td><%= comment.author %></td>
+          <td><%= comment.content %></td>
+          <td><%= comment.created_at %></td>
+          <td class="status <%= comment.status %>"><%= comment.status %></td>
+          <td>
+            <% if (comment.status !== 'approved') { %>
+              <form action="/admin/comments/approve/<%= comment.id %>" method="POST">
+                <button class="btn" type="submit">通过</button>
+              </form>
+            <% } %>
+
+            <% if (comment.status !== 'rejected') { %>
+              <form action="/admin/comments/reject/<%= comment.id %>" method="POST">
+                <button class="btn gray" type="submit">拒绝</button>
+              </form>
+            <% } %>
+
+            <form action="/admin/comments/delete/<%= comment.id %>" method="POST">
+              <button class="btn red" type="submit" onclick="return confirm('确定删除这条评论吗？')">删除</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

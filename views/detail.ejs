@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title><%= article.title %></title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: white;
+      padding: 24px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .container {
+      width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .meta {
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .content {
+      line-height: 1.8;
+    }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+    }
+    textarea {
+      min-height: 120px;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .comment {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 20px;
+      color: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>文章详情</header>
+
+<div class="container">
+  <h1><%= article.title %></h1>
+  <p class="meta">分类：<%= article.category || '未分类' %></p>
+  <p class="meta">
+    标签：
+    <% if (article.tags) { %>
+      <% article.tags.split(',').forEach(tag => { %>
+        <a href="/?keyword=<%= tag.trim() %>" style="margin-right:6px; color:#2563eb;">
+          <%= tag.trim() %>
+        </a>
+      <% }) %>
+    <% } else { %>
+      无
+    <% } %>
+  </p>
+  <p class="meta">阅读量：<%= article.view_count %></p>
+  <div class="content"><%- article.content %></div>
+
+  <div style="margin-top:20px;">
+    <a href="/edit/<%= article.id %>">编辑</a>
+    <form action="/delete/<%= article.id %>" method="POST" style="display:inline;">
+      <button type="submit" onclick="return confirm('确定删除这篇文章吗？')">删除</button>
+    </form>
+  </div>
+
+<hr style="margin:30px 0;">
+
+<h2>发表评论</h2>
+<form action="/article/<%= article.id %>/comment" method="POST">
+  <input type="text" name="author" placeholder="请输入你的名字" required>
+  <textarea name="content" placeholder="请输入评论内容" required></textarea>
+  <button type="submit">提交评论</button>
+</form>
+
+<h2 style="margin-top:30px;">评论列表</h2>
+
+<% if (comments.length === 0) { %>
+  <p>暂无已审核评论</p>
+<% } %>
+
+<% comments.forEach(comment => { %>
+  <div class="comment">
+    <strong><%= comment.author %></strong>
+    <p><%= comment.content %></p>
+    <small style="color:#6b7280;">时间：<%= comment.created_at %></small>
+  </div>
+<% }) %>
+
+</body>
+</html>

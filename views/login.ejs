@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>管理员登录</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    .login-box {
+      width: 420px;
+      margin: 100px auto;
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .error {
+      color: #dc2626;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <h1>管理员登录</h1>
+
+  <% if (error) { %>
+    <div class="error"><%= error %></div>
+  <% } %>
+
+  <form action="/login" method="POST">
+    <input type="text" name="username" placeholder="请输入管理员账号" required>
+    <input type="password" name="password" placeholder="请输入密码" required>
+    <button type="submit">登录</button>
+  </form>
+
+  <a class="back" href="/">返回首页</a>
+</div>
+
+</body>
+</html>
