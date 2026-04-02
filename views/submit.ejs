@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>投稿文章</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: white;
+      padding: 24px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .container {
+      width: 1100px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .editor-wrapper {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .editor-pane,
+    .preview-pane {
+      flex: 1;
+    }
+    textarea {
+      min-height: 420px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      line-height: 1.6;
+    }
+    .preview-box {
+      min-height: 420px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f9fafb;
+      overflow: auto;
+      line-height: 1.8;
+    }
+    .preview-box h1,
+    .preview-box h2,
+    .preview-box h3 {
+      margin-top: 1em;
+    }
+    .preview-box pre {
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .preview-box code {
+      background: #eef2ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .preview-box pre code {
+      background: transparent;
+      padding: 0;
+    }
+    .actions {
+      margin-top: 20px;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    a {
+      margin-left: 12px;
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .tip {
+      margin-bottom: 16px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+
+<header>投稿文章</header>
+
+<div class="container">
+  <p class="tip">访客无需登录。文章提交后进入待审核，管理员审核通过后才会在首页显示。</p>
+
+  <form action="/submit" method="POST">
+    <input type="text" name="submitter_name" placeholder="请输入你的昵称，可选">
+    <input type="text" name="title" placeholder="请输入文章标题" required>
+    <input type="text" name="summary" placeholder="请输入文章摘要" required>
+    <input type="text" name="category" placeholder="请输入分类，例如：技术 / 学习" required>
+    <input type="text" name="tags" placeholder="请输入标签，多个标签用英文逗号分隔">
+
+    <div class="editor-wrapper">
+      <div class="editor-pane">
+        <label class="label" for="content">Markdown 编辑区</label>
+        <textarea id="content" name="content" placeholder="请输入 Markdown 正文" required></textarea>
+      </div>
+
+      <div class="preview-pane">
+        <label class="label">实时预览</label>
+        <div id="preview" class="preview-box">这里会显示实时预览效果。</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit">提交审核</button>
+      <a href="/">返回首页</a>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  const textarea = document.getElementById('content');
+  const preview = document.getElementById('preview');
+
+  function updatePreview() {
+    const markdownText = textarea.value.trim();
+
+    if (!markdownText) {
+      preview.innerHTML = '这里会显示实时预览效果。';
+      return;
+    }
+
+    preview.innerHTML = marked.parse(markdownText);
+  }
+
+  textarea.addEventListener('input', updatePreview);
+  updatePreview();
+</script>
+
+</body>
+</html>

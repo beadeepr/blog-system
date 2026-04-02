@@ -64,6 +64,15 @@
       color: #2563eb;
       text-decoration: none;
     }
+    .status-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 13px;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -71,8 +80,14 @@
 <header>文章详情</header>
 
 <div class="container">
-  <h1><%= article.title %></h1>
+  <h1>
+    <%= article.title %>
+    <% if (isAdmin && article.status && article.status !== 'approved') { %>
+      <span class="status-tag">当前状态：<%= article.status %></span>
+    <% } %>
+  </h1>
   <p class="meta">分类：<%= article.category || '未分类' %></p>
+  <p class="meta">投稿人：<%= article.submitter_name || '管理员' %></p>
   <p class="meta">
     标签：
     <% if (article.tags) { %>
@@ -88,12 +103,14 @@
   <p class="meta">阅读量：<%= article.view_count %></p>
   <div class="content"><%- article.content %></div>
 
-  <div style="margin-top:20px;">
-    <a href="/edit/<%= article.id %>">编辑</a>
-    <form action="/delete/<%= article.id %>" method="POST" style="display:inline;">
-      <button type="submit" onclick="return confirm('确定删除这篇文章吗？')">删除</button>
-    </form>
-  </div>
+  <% if (isAdmin) { %>
+    <div style="margin-top:20px;">
+      <a href="/edit/<%= article.id %>">编辑</a>
+      <form action="/delete/<%= article.id %>" method="POST" style="display:inline;">
+        <button type="submit" onclick="return confirm('确定删除这篇文章吗？')">删除</button>
+      </form>
+    </div>
+  <% } %>
 
 <hr style="margin:30px 0;">
 
@@ -103,6 +120,7 @@
   <textarea name="content" placeholder="请输入评论内容" required></textarea>
   <button type="submit">提交评论</button>
 </form>
+<p style="color:#6b7280; margin-top:10px;">评论采用审核制，审核通过后显示。</p>
 
 <h2 style="margin-top:30px;">评论列表</h2>
 
@@ -118,5 +136,8 @@
   </div>
 <% }) %>
 
+<a class="back" href="/">返回首页</a>
+
+</div>
 </body>
 </html>

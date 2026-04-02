@@ -127,10 +127,14 @@
     <button type="submit" class="btn">筛选</button>
   </form>
 
-<div style="display:flex; gap:10px;">
-  <a class="btn" href="/create">发布文章</a>
-  <a class="btn" href="/login">后台登录</a>
-</div>
+  <div style="display:flex; gap:10px;">
+    <a class="btn" href="/submit">我要投稿</a>
+    <% if (isAdmin) { %>
+      <a class="btn" href="/admin">后台管理</a>
+    <% } else { %>
+      <a class="btn" href="/login">后台登录</a>
+    <% } %>
+  </div>
 </div>
 
 <div class="container">

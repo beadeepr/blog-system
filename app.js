@@ -29,17 +29,21 @@ function requireAdmin(req, res, next) {
   res.redirect('/login');
 }
 
+function isAdmin(req) {
+  return !!(req.session && req.session.isAdmin);
+}
+
 // ==================== 前台 ====================
 
-// 首页：搜索 + 分类 + 分页
+// 首页：搜索 + 分类 + 分页（只显示已审核文章）
 app.get('/', (req, res) => {
   const keyword = req.query.keyword ? req.query.keyword.trim() : '';
   const category = req.query.category ? req.query.category.trim() : '';
-  const page = parseInt(req.query.page) || 1;
+  const page = parseInt(req.query.page, 10) || 1;
   const pageSize = 5;
   const offset = (page - 1) * pageSize;
 
-  let whereSql = 'WHERE 1=1';
+  let whereSql = `WHERE status = 'approved'`;
   const params = [];
 
   if (keyword) {
@@ -65,10 +69,10 @@ app.get('/', (req, res) => {
 
   const categories = db.prepare(`
     SELECT DISTINCT category FROM articles
-    WHERE category IS NOT NULL AND category != ''
+    WHERE status = 'approved' AND category IS NOT NULL AND category != ''
   `).all();
 
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   res.render('index', {
     articles,
@@ -76,17 +80,65 @@ app.get('/', (req, res) => {
     category,
     categories,
     page,
-    totalPages
+    totalPages,
+    isAdmin: isAdmin(req)
   });
+});
+
+// 游客投稿页
+app.get('/submit', (req, res) => {
+  res.render('submit');
+});
+
+// 游客提交文章，默认待审核
+app.post('/submit', (req, res) => {
+  const {
+    title = '',
+    content = '',
+    summary = '',
+    category = '',
+    tags = '',
+    submitter_name = ''
+  } = req.body;
+
+  if (!title.trim() || !content.trim() || !summary.trim() || !category.trim()) {
+    return res.send('标题、内容、摘要、分类不能为空');
+  }
+
+  db.prepare(`
+    INSERT INTO articles (
+      title, content, summary, category, tags, view_count, status, submitter_name, created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)
+  `).run(
+    title.trim(),
+    content.trim(),
+    summary.trim(),
+    category.trim(),
+    tags.trim(),
+    0,
+    submitter_name.trim() || '匿名投稿'
+  );
+
+  res.send(`
+    <script>
+      alert('文章投稿成功，审核通过后将显示');
+      window.location.href = '/';
+    </script>
+  `);
 });
 
 // 文章详情
 app.get('/article/:id', (req, res) => {
   const id = req.params.id;
-
   const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(id);
+
   if (!article) {
     return res.status(404).send('文章不存在');
+  }
+
+  if (article.status !== 'approved' && !isAdmin(req)) {
+    return res.status(404).send('文章不存在或尚未通过审核');
   }
 
   db.prepare('UPDATE articles SET view_count = view_count + 1 WHERE id = ?').run(id);
@@ -100,7 +152,11 @@ app.get('/article/:id', (req, res) => {
     ORDER BY id DESC
   `).all(id);
 
-  res.render('detail', { article: updatedArticle, comments });
+  res.render('detail', {
+    article: updatedArticle,
+    comments,
+    isAdmin: isAdmin(req)
+  });
 });
 
 // 访客提交评论
@@ -161,11 +217,15 @@ app.get('/admin', requireAdmin, (req, res) => {
   const pendingCount = db.prepare(`
     SELECT COUNT(*) AS count FROM comments WHERE status = 'pending'
   `).get().count;
+  const pendingArticleCount = db.prepare(`
+    SELECT COUNT(*) AS count FROM articles WHERE status = 'pending'
+  `).get().count;
 
   res.render('admin', {
     articleCount,
     commentCount,
     pendingCount,
+    pendingArticleCount,
     adminName: req.session.adminName
   });
 });
@@ -197,12 +257,12 @@ app.get('/admin/comments', requireAdmin, (req, res) => {
   });
 });
 
-// 发布文章页
+// 发布文章页（管理员直发）
 app.get('/create', requireAdmin, (req, res) => {
   res.render('create');
 });
 
-// 提交文章
+// 提交文章（管理员直发，直接 approved）
 app.post('/create', requireAdmin, (req, res) => {
   const { title, content, summary, category, tags } = req.body;
 
@@ -211,9 +271,11 @@ app.post('/create', requireAdmin, (req, res) => {
   }
 
   db.prepare(`
-    INSERT INTO articles (title, content, summary, category, tags, view_count)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(title, content, summary, category, tags || '', 0);
+    INSERT INTO articles (
+      title, content, summary, category, tags, view_count, status, submitter_name, created_at, reviewed_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  `).run(title, content, summary, category, tags || '', 0, req.session.adminName || '管理员');
 
   res.redirect('/admin/articles');
 });
@@ -249,6 +311,32 @@ app.post('/delete/:id', requireAdmin, (req, res) => {
   const id = req.params.id;
 
   db.prepare('DELETE FROM articles WHERE id = ?').run(id);
+
+  res.redirect('/admin/articles');
+});
+
+// 审核通过文章
+app.post('/admin/articles/approve/:id', requireAdmin, (req, res) => {
+  const id = req.params.id;
+
+  db.prepare(`
+    UPDATE articles
+    SET status = 'approved', reviewed_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(id);
+
+  res.redirect('/admin/articles');
+});
+
+// 拒绝文章
+app.post('/admin/articles/reject/:id', requireAdmin, (req, res) => {
+  const id = req.params.id;
+
+  db.prepare(`
+    UPDATE articles
+    SET status = 'rejected', reviewed_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(id);
 
   res.redirect('/admin/articles');
 });

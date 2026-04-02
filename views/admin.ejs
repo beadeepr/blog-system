@@ -28,7 +28,7 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -78,6 +78,10 @@
       <p>文章总数</p>
     </div>
     <div class="card">
+      <h2><%= pendingArticleCount %></h2>
+      <p>待审核文章</p>
+    </div>
+    <div class="card">
       <h2><%= commentCount %></h2>
       <p>评论总数</p>
     </div>
@@ -88,7 +92,7 @@
   </div>
 
   <div class="menu">
-    <a href="/admin/articles">文章管理</a>
+    <a href="/admin/articles">文章管理 / 审核</a>
     <a href="/admin/comments">评论审核</a>
     <a href="/create">发布文章</a>
     <a href="/" class="gray">返回首页</a>
