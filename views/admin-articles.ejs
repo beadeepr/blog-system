@@ -26,6 +26,9 @@
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+    .top {
+      margin-bottom: 20px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -62,15 +65,14 @@
   </style>
 </head>
 <body>
-
 <header>文章管理</header>
 
 <div class="container">
-  <p>
+  <div class="top">
     <a href="/admin" class="btn gray">返回后台首页</a>
     <a href="/create" class="btn">发布新文章</a>
     <a href="/logout" class="btn gray">退出登录</a>
-  </p>
+  </div>
 
   <table>
     <thead>
@@ -103,6 +105,5 @@
     </tbody>
   </table>
 </div>
-
 </body>
 </html>

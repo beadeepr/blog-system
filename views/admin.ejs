@@ -22,6 +22,10 @@
       width: 1000px;
       margin: 30px auto;
     }
+    .welcome {
+      margin-bottom: 20px;
+      color: #374151;
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -63,10 +67,11 @@
   </style>
 </head>
 <body>
-
 <header>博客后台管理系统</header>
 
 <div class="container">
+  <div class="welcome">欢迎你，<strong><%= adminName %></strong></div>
+
   <div class="grid">
     <div class="card">
       <h2><%= articleCount %></h2>
@@ -83,13 +88,12 @@
   </div>
 
   <div class="menu">
-  <a href="/admin/articles">文章管理</a>
-  <a href="/admin/comments">评论审核</a>
-  <a href="/create">发布文章</a>
-  <a href="/" class="gray">返回首页</a>
-  <a href="/logout" class="gray">退出登录</a>
+    <a href="/admin/articles">文章管理</a>
+    <a href="/admin/comments">评论审核</a>
+    <a href="/create">发布文章</a>
+    <a href="/" class="gray">返回首页</a>
+    <a href="/logout" class="gray">退出登录</a>
   </div>
 </div>
-
 </body>
 </html>

@@ -1,17 +1,13 @@
-const marked = require('marked');
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
-const db = require('./db/database');
 const session = require('express-session');
+const marked = require('marked');
+const db = require('./db/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`服务器运行在 http://localhost:${PORT}`);
-});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -19,6 +15,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+
 app.use(session({
   secret: 'blog_admin_secret_2026',
   resave: false,
@@ -32,36 +29,12 @@ function requireAdmin(req, res, next) {
   res.redirect('/login');
 }
 
-app.get('/login', (req, res) => {
-  res.render('login', { error: '' });
-});
+// ==================== 前台 ====================
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-
-  // 这里先写死一个管理员账号，适合作业
-  const adminUsername = 'admin';
-  const adminPassword = '123456';
-
-  if (username === adminUsername && password === adminPassword) {
-    req.session.isAdmin = true;
-    req.session.adminName = username;
-    return res.redirect('/admin');
-  }
-
-  res.render('login', { error: '用户名或密码错误' });
-});
-
-app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/login');
-  });
-});
-
-// 首页：文章列表
+// 首页：搜索 + 分类 + 分页
 app.get('/', (req, res) => {
-const keyword = req.query.keyword ? req.query.keyword.trim() : '';
-const category = req.query.category ? req.query.category.trim() : '';
+  const keyword = req.query.keyword ? req.query.keyword.trim() : '';
+  const category = req.query.category ? req.query.category.trim() : '';
   const page = parseInt(req.query.page) || 1;
   const pageSize = 5;
   const offset = (page - 1) * pageSize;
@@ -79,11 +52,9 @@ const category = req.query.category ? req.query.category.trim() : '';
     params.push(category);
   }
 
-  // 查询总条数
   const countSql = `SELECT COUNT(*) as total FROM articles ${whereSql}`;
   const total = db.prepare(countSql).get(...params).total;
 
-  // 查询当前页数据
   const listSql = `
     SELECT * FROM articles
     ${whereSql}
@@ -108,12 +79,12 @@ const category = req.query.category ? req.query.category.trim() : '';
     totalPages
   });
 });
-// 文章详情页
+
+// 文章详情
 app.get('/article/:id', (req, res) => {
   const id = req.params.id;
 
   const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(id);
-
   if (!article) {
     return res.status(404).send('文章不存在');
   }
@@ -131,79 +102,8 @@ app.get('/article/:id', (req, res) => {
 
   res.render('detail', { article: updatedArticle, comments });
 });
-// 发布文章页面
-app.get('/create', requireAdmin, (req, res) => {
-  res.render('create');
-});
 
-// 提交新文章
-app.post('/create', requireAdmin, (req, res) => {
-  const { title, content, summary, category, tags } = req.body;
-
-  if (!title || !content || !summary || !category) {
-    return res.send('标题、内容、摘要、分类不能为空');
-  }
-
-  db.prepare(`
-    INSERT INTO articles (title, content, summary, category, tags, view_count)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(title, content, summary, category, tags || '', 0);
-
-  res.redirect('/');
-});
-
-app.listen(PORT, () => {
-  console.log(`服务器运行在：http://localhost:${PORT}`);
-});
-// 编辑页面
-app.get('/edit/:id', requireAdmin, (req, res) => {
-  const id = req.params.id;
-  const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(id);
-
-  if (!article) {
-    return res.send('文章不存在');
-  }
-
-  res.render('edit', { article });
-});
-// 提交编辑
-app.post('/edit/:id', requireAdmin, (req, res) => {
-  const id = req.params.id;
-  const { title, content, summary, category, tags } = req.body;
-
-  db.prepare(`
-    UPDATE articles
-    SET title = ?, content = ?, summary = ?, category = ?, tags = ?
-    WHERE id = ?
-  `).run(title, content, summary, category, tags || '', id);
-
-  res.redirect('/article/' + id);
-});
-// 删除文章
-app.post('/delete/:id', requireAdmin, (req, res) => {
-  const id = req.params.id;
-
-  db.prepare('DELETE FROM articles WHERE id = ?').run(id);
-
-  res.redirect('/');
-});
-
-app.post('/article/:id/comment', (req, res) => {
-  const articleId = req.params.id;
-  const { author, content } = req.body;
-
-  if (!author || !content) {
-    return res.send('评论人和评论内容不能为空');
-  }
-
-  db.prepare(`
-    INSERT INTO comments (article_id, author, content)
-    VALUES (?, ?, ?)
-  `).run(articleId, author, content);
-
-  res.redirect('/article/' + articleId);
-});
-
+// 访客提交评论
 app.post('/article/:id/comment', (req, res) => {
   const articleId = req.params.id;
   const { author, content } = req.body;
@@ -225,6 +125,64 @@ app.post('/article/:id/comment', (req, res) => {
   `);
 });
 
+// ==================== 登录 ====================
+
+app.get('/login', (req, res) => {
+  res.render('login', { error: '' });
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  const adminUsername = 'admin';
+  const adminPassword = '123456';
+
+  if (username === adminUsername && password === adminPassword) {
+    req.session.isAdmin = true;
+    req.session.adminName = username;
+    return res.redirect('/admin');
+  }
+
+  res.render('login', { error: '用户名或密码错误' });
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login');
+  });
+});
+
+// ==================== 后台 ====================
+
+// 后台首页
+app.get('/admin', requireAdmin, (req, res) => {
+  const articleCount = db.prepare('SELECT COUNT(*) AS count FROM articles').get().count;
+  const commentCount = db.prepare('SELECT COUNT(*) AS count FROM comments').get().count;
+  const pendingCount = db.prepare(`
+    SELECT COUNT(*) AS count FROM comments WHERE status = 'pending'
+  `).get().count;
+
+  res.render('admin', {
+    articleCount,
+    commentCount,
+    pendingCount,
+    adminName: req.session.adminName
+  });
+});
+
+// 文章管理页
+app.get('/admin/articles', requireAdmin, (req, res) => {
+  const articles = db.prepare(`
+    SELECT * FROM articles ORDER BY id DESC
+  `).all();
+
+  res.render('admin-articles', {
+    articles,
+    adminName: req.session.adminName
+  });
+});
+
+// 评论审核页
 app.get('/admin/comments', requireAdmin, (req, res) => {
   const comments = db.prepare(`
     SELECT comments.*, articles.title AS article_title
@@ -233,9 +191,69 @@ app.get('/admin/comments', requireAdmin, (req, res) => {
     ORDER BY comments.id DESC
   `).all();
 
-  res.render('admin-comments', { comments });
+  res.render('admin-comments', {
+    comments,
+    adminName: req.session.adminName
+  });
 });
 
+// 发布文章页
+app.get('/create', requireAdmin, (req, res) => {
+  res.render('create');
+});
+
+// 提交文章
+app.post('/create', requireAdmin, (req, res) => {
+  const { title, content, summary, category, tags } = req.body;
+
+  if (!title || !content || !summary || !category) {
+    return res.send('标题、内容、摘要、分类不能为空');
+  }
+
+  db.prepare(`
+    INSERT INTO articles (title, content, summary, category, tags, view_count)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(title, content, summary, category, tags || '', 0);
+
+  res.redirect('/admin/articles');
+});
+
+// 编辑文章页
+app.get('/edit/:id', requireAdmin, (req, res) => {
+  const id = req.params.id;
+  const article = db.prepare('SELECT * FROM articles WHERE id = ?').get(id);
+
+  if (!article) {
+    return res.send('文章不存在');
+  }
+
+  res.render('edit', { article });
+});
+
+// 提交编辑
+app.post('/edit/:id', requireAdmin, (req, res) => {
+  const id = req.params.id;
+  const { title, content, summary, category, tags } = req.body;
+
+  db.prepare(`
+    UPDATE articles
+    SET title = ?, content = ?, summary = ?, category = ?, tags = ?
+    WHERE id = ?
+  `).run(title, content, summary, category, tags || '', id);
+
+  res.redirect('/admin/articles');
+});
+
+// 删除文章
+app.post('/delete/:id', requireAdmin, (req, res) => {
+  const id = req.params.id;
+
+  db.prepare('DELETE FROM articles WHERE id = ?').run(id);
+
+  res.redirect('/admin/articles');
+});
+
+// 审核通过评论
 app.post('/admin/comments/approve/:id', requireAdmin, (req, res) => {
   const id = req.params.id;
 
@@ -248,6 +266,7 @@ app.post('/admin/comments/approve/:id', requireAdmin, (req, res) => {
   res.redirect('/admin/comments');
 });
 
+// 拒绝评论
 app.post('/admin/comments/reject/:id', requireAdmin, (req, res) => {
   const id = req.params.id;
 
@@ -260,6 +279,7 @@ app.post('/admin/comments/reject/:id', requireAdmin, (req, res) => {
   res.redirect('/admin/comments');
 });
 
+// 删除评论
 app.post('/admin/comments/delete/:id', requireAdmin, (req, res) => {
   const id = req.params.id;
 
@@ -271,24 +291,6 @@ app.post('/admin/comments/delete/:id', requireAdmin, (req, res) => {
   res.redirect('/admin/comments');
 });
 
-app.get('/admin', requireAdmin, (req, res) => {
-  const articleCount = db.prepare('SELECT COUNT(*) AS count FROM articles').get().count;
-  const commentCount = db.prepare('SELECT COUNT(*) AS count FROM comments').get().count;
-  const pendingCount = db.prepare(`
-    SELECT COUNT(*) AS count FROM comments WHERE status = 'pending'
-  `).get().count;
-
-  res.render('admin', {
-    articleCount,
-    commentCount,
-    pendingCount
-  });
-});
-
-app.get('/admin/articles', requireAdmin, (req, res) => {
-  const articles = db.prepare(`
-    SELECT * FROM articles ORDER BY id DESC
-  `).all();
-
-  res.render('admin-articles', { articles });
+app.listen(PORT, () => {
+  console.log(`服务器运行在: http://localhost:${PORT}`);
 });

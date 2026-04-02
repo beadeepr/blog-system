@@ -11,12 +11,12 @@
       padding: 0;
     }
     header {
-      background: white;
+      background: #111827;
+      color: white;
       padding: 24px;
       text-align: center;
       font-size: 24px;
       font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
     .container {
       width: 1000px;
@@ -71,18 +71,20 @@
     form {
       display: inline;
     }
+    .top {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-
 <header>评论审核管理</header>
 
 <div class="container">
-  <p>
-  <a href="/admin" class="btn gray">返回后台首页</a>
-  <a href="/" class="btn gray">返回首页</a>
-  <a href="/logout" class="btn gray">退出登录</a>
-</p>
+  <div class="top">
+    <a href="/admin" class="btn gray">返回后台首页</a>
+    <a href="/" class="btn gray">返回首页</a>
+    <a href="/logout" class="btn gray">退出登录</a>
+  </div>
 
   <table>
     <thead>
@@ -127,6 +129,5 @@
     </tbody>
   </table>
 </div>
-
 </body>
 </html>
